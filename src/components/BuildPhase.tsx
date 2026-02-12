@@ -358,7 +358,6 @@ function LiveMetrics() {
   const scenario = useGameStore((s) => s.getCurrentScenario());
   const agents = useGameStore((s) => s.agents);
   const [score, setScore] = useState(getLiveScore());
-  const [expanded, setExpanded] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -375,75 +374,61 @@ function LiveMetrics() {
 
   const healthColor = score.overallScore >= 85 ? '#22c55e' : score.overallScore >= 70 ? '#eab308' : '#ef4444';
 
-  // Mobile: compact bar that expands on tap
+  // Mobile: always-visible compact panel matching desktop info
   if (isMobile) {
     return (
-      <div className="absolute bottom-0 left-0 right-0 bg-slate-900/95 border-t border-slate-700 backdrop-blur-sm z-10">
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="w-full flex items-center justify-between px-3 py-2 cursor-pointer"
-        >
-          <div className="flex items-center gap-2">
-            <div className="w-20 h-2 bg-slate-800 rounded-full overflow-hidden">
-              <div className="h-full rounded-full transition-all duration-500" style={{ width: `${score.overallScore}%`, backgroundColor: healthColor }} />
+      <div className="absolute bottom-0 left-0 right-0 bg-slate-900/95 border-t border-slate-700 backdrop-blur-sm z-10 px-3 py-2 space-y-1.5">
+        {/* Row 1: Health bar + Stakeholders */}
+        <div className="flex items-center gap-3">
+          {/* Health */}
+          <div className="shrink-0">
+            <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-0.5">Ecosystem Health</div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-16 h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${score.overallScore}%`, backgroundColor: healthColor }} />
+              </div>
+              <span className="text-xs font-bold text-slate-200">{score.overallScore}%</span>
             </div>
-            <span className="text-xs font-bold text-slate-200">{score.overallScore}%</span>
-            {warnings.length > 0 && (
-              <span className="flex items-center gap-0.5 text-[10px] text-amber-400">
-                <AlertTriangle size={9} /> {warnings.length}
-              </span>
+          </div>
+          {/* Stakeholders */}
+          <div className="flex-1 min-w-0">
+            <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-0.5">Stakeholders</div>
+            <div className="flex flex-wrap gap-x-2.5 gap-y-0.5">
+              {scenario.stakeholders.map((sh) => {
+                const shScore = score.stakeholderScores[sh.id] || 0;
+                return (
+                  <div key={sh.id} className="flex items-center gap-1 text-[10px]">
+                    <span>{sh.icon}</span>
+                    <span className="text-slate-400">{sh.name}:</span>
+                    <span className={`font-mono font-medium ${
+                      shScore >= sh.targetPercent ? 'text-emerald-400' : shScore >= sh.targetPercent * 0.8 ? 'text-yellow-400' : 'text-red-400'
+                    }`}>{shScore}%</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          {/* Synergies count */}
+          <div className="shrink-0 text-right">
+            <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-0.5">Synergies</div>
+            {activeSynergies.length > 0 ? (
+              <div className="text-[10px] text-emerald-400 font-medium">{activeSynergies.length} active</div>
+            ) : (
+              <div className="text-[10px] text-slate-600">None</div>
             )}
           </div>
-          {expanded ? <ChevronDown size={14} className="text-slate-500" /> : <ChevronUp size={14} className="text-slate-500" />}
-        </button>
+        </div>
 
-        <AnimatePresence>
-          {expanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="px-3 pb-3 space-y-2">
-                {/* Stakeholders */}
-                <div className="flex flex-wrap gap-x-3 gap-y-1">
-                  {scenario.stakeholders.map((sh) => {
-                    const shScore = score.stakeholderScores[sh.id] || 0;
-                    return (
-                      <div key={sh.id} className="flex items-center gap-1 text-[10px]">
-                        <span>{sh.icon}</span>
-                        <span className={`font-mono font-medium ${
-                          shScore >= sh.targetPercent ? 'text-emerald-400' : shScore >= sh.targetPercent * 0.8 ? 'text-yellow-400' : 'text-red-400'
-                        }`}>{shScore}%</span>
-                      </div>
-                    );
-                  })}
-                </div>
-                {/* Synergies */}
-                {activeSynergies.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {activeSynergies.map((s, i) => (
-                      <div key={i} className="flex items-center gap-1 text-[10px] text-emerald-400">
-                        <CheckCircle size={9} /> {s}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {/* Warnings */}
-                {warnings.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 pt-1 border-t border-slate-800">
-                    {warnings.map((f, i) => (
-                      <div key={i} className="flex items-center gap-1 text-[10px] text-amber-400">
-                        <AlertTriangle size={9} /> {f.message}
-                      </div>
-                    ))}
-                  </div>
-                )}
+        {/* Row 2: Warnings (if any) */}
+        {warnings.length > 0 && (
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 pt-1 border-t border-slate-800">
+            {warnings.map((f, i) => (
+              <div key={i} className="flex items-center gap-1 text-[10px] text-amber-400">
+                <AlertTriangle size={9} /> {f.message}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
