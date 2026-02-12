@@ -374,58 +374,41 @@ function LiveMetrics() {
 
   const healthColor = score.overallScore >= 85 ? '#22c55e' : score.overallScore >= 70 ? '#eab308' : '#ef4444';
 
-  // Mobile: always-visible compact panel matching desktop info
+  // Mobile: inline (non-absolute) compact panel — rendered in document flow
   if (isMobile) {
     return (
-      <div className="absolute bottom-0 left-0 right-0 bg-slate-900/95 border-t border-slate-700 backdrop-blur-sm z-10 px-3 py-2 space-y-1.5">
-        {/* Row 1: Health bar + Stakeholders */}
-        <div className="flex items-center gap-3">
-          {/* Health */}
-          <div className="shrink-0">
-            <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-0.5">Ecosystem Health</div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-16 h-2 bg-slate-800 rounded-full overflow-hidden">
-                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${score.overallScore}%`, backgroundColor: healthColor }} />
-              </div>
-              <span className="text-xs font-bold text-slate-200">{score.overallScore}%</span>
-            </div>
+      <div className="bg-slate-900 border-t border-slate-700 px-3 py-1.5 space-y-1 shrink-0">
+        {/* Row 1: Health + Stakeholders inline */}
+        <div className="flex items-center gap-2">
+          <div className="w-14 h-1.5 bg-slate-800 rounded-full overflow-hidden shrink-0">
+            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${score.overallScore}%`, backgroundColor: healthColor }} />
           </div>
-          {/* Stakeholders */}
-          <div className="flex-1 min-w-0">
-            <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-0.5">Stakeholders</div>
-            <div className="flex flex-wrap gap-x-2.5 gap-y-0.5">
-              {scenario.stakeholders.map((sh) => {
-                const shScore = score.stakeholderScores[sh.id] || 0;
-                return (
-                  <div key={sh.id} className="flex items-center gap-1 text-[10px]">
-                    <span>{sh.icon}</span>
-                    <span className="text-slate-400">{sh.name}:</span>
-                    <span className={`font-mono font-medium ${
-                      shScore >= sh.targetPercent ? 'text-emerald-400' : shScore >= sh.targetPercent * 0.8 ? 'text-yellow-400' : 'text-red-400'
-                    }`}>{shScore}%</span>
-                  </div>
-                );
-              })}
-            </div>
+          <span className="text-[10px] font-bold text-slate-200 shrink-0">{score.overallScore}%</span>
+          <span className="text-slate-700 text-[10px]">|</span>
+          <div className="flex flex-wrap gap-x-2 gap-y-0 flex-1 min-w-0">
+            {scenario.stakeholders.map((sh) => {
+              const shScore = score.stakeholderScores[sh.id] || 0;
+              return (
+                <span key={sh.id} className="flex items-center gap-0.5 text-[10px]">
+                  <span>{sh.icon}</span>
+                  <span className={`font-mono ${
+                    shScore >= sh.targetPercent ? 'text-emerald-400' : shScore >= sh.targetPercent * 0.8 ? 'text-yellow-400' : 'text-red-400'
+                  }`}>{shScore}%</span>
+                </span>
+              );
+            })}
           </div>
-          {/* Synergies count */}
-          <div className="shrink-0 text-right">
-            <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-0.5">Synergies</div>
-            {activeSynergies.length > 0 ? (
-              <div className="text-[10px] text-emerald-400 font-medium">{activeSynergies.length} active</div>
-            ) : (
-              <div className="text-[10px] text-slate-600">None</div>
-            )}
-          </div>
+          {activeSynergies.length > 0 && (
+            <span className="text-[10px] text-emerald-400 shrink-0">⚡{activeSynergies.length}</span>
+          )}
         </div>
-
         {/* Row 2: Warnings (if any) */}
         {warnings.length > 0 && (
-          <div className="flex flex-wrap gap-x-3 gap-y-0.5 pt-1 border-t border-slate-800">
+          <div className="flex flex-wrap gap-x-2 gap-y-0">
             {warnings.map((f, i) => (
-              <div key={i} className="flex items-center gap-1 text-[10px] text-amber-400">
-                <AlertTriangle size={9} /> {f.message}
-              </div>
+              <span key={i} className="flex items-center gap-0.5 text-[9px] text-amber-400">
+                <AlertTriangle size={8} /> {f.message}
+              </span>
             ))}
           </div>
         )}
@@ -797,21 +780,18 @@ export default function BuildPhase() {
             )}
           </div>
 
-          {/* Live Metrics (desktop: overlay on board, mobile: handled separately) */}
+          {/* Live Metrics (desktop only — overlay on board) */}
           {!isMobile && <LiveMetrics />}
 
-          {/* Mobile: drawer + metrics */}
+          {/* Mobile: drawer only (metrics moved to bottom section) */}
           {isMobile && (
-            <>
-              <LiveMetrics />
-              <MobileDrawer
-                habitatTypes={habitatTypes}
-                agentTypes={agentTypes}
-                onPlaceHabitat={handleMobilePlaceHabitat}
-                onPlaceAgent={placeAgent}
-                habitats={habitats}
-              />
-            </>
+            <MobileDrawer
+              habitatTypes={habitatTypes}
+              agentTypes={agentTypes}
+              onPlaceHabitat={handleMobilePlaceHabitat}
+              onPlaceAgent={placeAgent}
+              habitats={habitats}
+            />
           )}
         </div>
 
@@ -832,6 +812,9 @@ export default function BuildPhase() {
           </div>
         )}
       </div>
+
+      {/* Mobile: Live Metrics in document flow (not absolute) */}
+      {isMobile && <LiveMetrics />}
 
       {/* Bottom Bar */}
       <div className="flex items-center justify-between px-2 sm:px-4 py-1.5 sm:py-2 bg-slate-800 border-t border-slate-700 shrink-0">
