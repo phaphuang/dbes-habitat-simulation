@@ -7,9 +7,20 @@ import { isAgentGoodFit, getActiveSynergies } from '@/lib/scoring';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Clock, Coins, Star, ArrowUpCircle, Link2, Trash2, AlertTriangle,
-  CheckCircle, Zap, RotateCcw, FlaskConical, X
+  CheckCircle, Zap, RotateCcw, FlaskConical, X, ChevronUp, ChevronDown, Plus, MapPin
 } from 'lucide-react';
 import { useEffect, useRef, useState, useCallback } from 'react';
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+  return isMobile;
+}
 
 function formatTime(seconds: number) {
   const m = Math.floor(seconds / 60);
@@ -20,21 +31,22 @@ function formatTime(seconds: number) {
 // ============================================================
 // Habitat Palette Item (left panel)
 // ============================================================
-function HabitatPaletteItem({ type }: { type: HabitatType }) {
+function HabitatPaletteItem({ type, onTap }: { type: HabitatType; onTap?: () => void }) {
   const def = HABITATS[type];
   const credits = useGameStore((s) => s.credits);
   const canAfford = credits >= def.cost;
 
   return (
     <div
-      draggable={canAfford}
+      draggable={canAfford && !onTap}
       onDragStart={(e) => {
         e.dataTransfer.setData('habitat-type', type);
         e.dataTransfer.effectAllowed = 'copy';
       }}
-      className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-all cursor-grab active:cursor-grabbing select-none ${
+      onClick={() => canAfford && onTap?.()}
+      className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-all select-none ${
         canAfford
-          ? 'border-slate-600 bg-slate-800 hover:border-slate-500 hover:bg-slate-750'
+          ? onTap ? 'border-slate-600 bg-slate-800 hover:border-slate-500 hover:bg-slate-750 cursor-pointer active:bg-slate-700' : 'border-slate-600 bg-slate-800 hover:border-slate-500 hover:bg-slate-750 cursor-grab active:cursor-grabbing'
           : 'border-slate-800 bg-slate-900/50 opacity-40 cursor-not-allowed'
       }`}
     >
@@ -53,21 +65,22 @@ function HabitatPaletteItem({ type }: { type: HabitatType }) {
 // ============================================================
 // Agent Palette Item (right panel)
 // ============================================================
-function AgentPaletteItem({ type }: { type: string }) {
+function AgentPaletteItem({ type, onTap }: { type: string; onTap?: () => void }) {
   const def = AGENTS[type];
   const credits = useGameStore((s) => s.credits);
   const canAfford = credits >= def.cost;
 
   return (
     <div
-      draggable={canAfford}
+      draggable={canAfford && !onTap}
       onDragStart={(e) => {
         e.dataTransfer.setData('agent-type', type);
         e.dataTransfer.effectAllowed = 'copy';
       }}
-      className={`flex items-center gap-2 rounded-lg border px-3 py-2 transition-all cursor-grab active:cursor-grabbing select-none ${
+      onClick={() => canAfford && onTap?.()}
+      className={`flex items-center gap-2 rounded-lg border px-3 py-2 transition-all select-none ${
         canAfford
-          ? 'border-slate-600 bg-slate-800 hover:border-slate-500'
+          ? onTap ? 'border-slate-600 bg-slate-800 hover:border-slate-500 cursor-pointer active:bg-slate-700' : 'border-slate-600 bg-slate-800 hover:border-slate-500 cursor-grab active:cursor-grabbing'
           : 'border-slate-800 bg-slate-900/50 opacity-40 cursor-not-allowed'
       }`}
     >
@@ -345,6 +358,8 @@ function LiveMetrics() {
   const scenario = useGameStore((s) => s.getCurrentScenario());
   const agents = useGameStore((s) => s.agents);
   const [score, setScore] = useState(getLiveScore());
+  const [expanded, setExpanded] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -354,9 +369,86 @@ function LiveMetrics() {
   }, [getLiveScore]);
 
   const activeSynergies = getActiveSynergies(agents);
+  const warnings = score?.feedback.filter((f) => f.type === 'warning') || [];
 
   if (!score || !scenario) return null;
 
+  const healthColor = score.overallScore >= 85 ? '#22c55e' : score.overallScore >= 70 ? '#eab308' : '#ef4444';
+
+  // Mobile: compact bar that expands on tap
+  if (isMobile) {
+    return (
+      <div className="absolute bottom-0 left-0 right-0 bg-slate-900/95 border-t border-slate-700 backdrop-blur-sm z-10">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="w-full flex items-center justify-between px-3 py-2 cursor-pointer"
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-20 h-2 bg-slate-800 rounded-full overflow-hidden">
+              <div className="h-full rounded-full transition-all duration-500" style={{ width: `${score.overallScore}%`, backgroundColor: healthColor }} />
+            </div>
+            <span className="text-xs font-bold text-slate-200">{score.overallScore}%</span>
+            {warnings.length > 0 && (
+              <span className="flex items-center gap-0.5 text-[10px] text-amber-400">
+                <AlertTriangle size={9} /> {warnings.length}
+              </span>
+            )}
+          </div>
+          {expanded ? <ChevronDown size={14} className="text-slate-500" /> : <ChevronUp size={14} className="text-slate-500" />}
+        </button>
+
+        <AnimatePresence>
+          {expanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="px-3 pb-3 space-y-2">
+                {/* Stakeholders */}
+                <div className="flex flex-wrap gap-x-3 gap-y-1">
+                  {scenario.stakeholders.map((sh) => {
+                    const shScore = score.stakeholderScores[sh.id] || 0;
+                    return (
+                      <div key={sh.id} className="flex items-center gap-1 text-[10px]">
+                        <span>{sh.icon}</span>
+                        <span className={`font-mono font-medium ${
+                          shScore >= sh.targetPercent ? 'text-emerald-400' : shScore >= sh.targetPercent * 0.8 ? 'text-yellow-400' : 'text-red-400'
+                        }`}>{shScore}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Synergies */}
+                {activeSynergies.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {activeSynergies.map((s, i) => (
+                      <div key={i} className="flex items-center gap-1 text-[10px] text-emerald-400">
+                        <CheckCircle size={9} /> {s}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* Warnings */}
+                {warnings.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1 border-t border-slate-800">
+                    {warnings.map((f, i) => (
+                      <div key={i} className="flex items-center gap-1 text-[10px] text-amber-400">
+                        <AlertTriangle size={9} /> {f.message}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  // Desktop: full horizontal layout
   return (
     <div className="absolute bottom-4 left-4 right-4 bg-slate-900/95 border border-slate-700 rounded-xl p-4 backdrop-blur-sm z-10">
       <div className="flex items-start gap-6">
@@ -367,10 +459,7 @@ function LiveMetrics() {
             <div className="w-32 h-3 bg-slate-800 rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${score.overallScore}%`,
-                  backgroundColor: score.overallScore >= 85 ? '#22c55e' : score.overallScore >= 70 ? '#eab308' : '#ef4444',
-                }}
+                style={{ width: `${score.overallScore}%`, backgroundColor: healthColor }}
               />
             </div>
             <span className="text-sm font-bold text-slate-200">{score.overallScore}%</span>
@@ -416,9 +505,9 @@ function LiveMetrics() {
       </div>
 
       {/* Warnings */}
-      {score.feedback.filter((f) => f.type === 'warning').length > 0 && (
+      {warnings.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-2 pt-2 border-t border-slate-800">
-          {score.feedback.filter((f) => f.type === 'warning').map((f, i) => (
+          {warnings.map((f, i) => (
             <div key={i} className="flex items-center gap-1 text-[10px] text-amber-400">
               <AlertTriangle size={10} /> {f.message}
             </div>
@@ -430,16 +519,148 @@ function LiveMetrics() {
 }
 
 // ============================================================
+// Mobile Bottom Drawer for Habitats/Agents
+// ============================================================
+function MobileDrawer({
+  habitatTypes,
+  agentTypes,
+  onPlaceHabitat,
+  onPlaceAgent,
+  habitats,
+}: {
+  habitatTypes: HabitatType[];
+  agentTypes: string[];
+  onPlaceHabitat: (type: HabitatType) => void;
+  onPlaceAgent: (type: string, habitatId: string) => void;
+  habitats: PlacedHabitat[];
+}) {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'habitats' | 'agents'>('habitats');
+  const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
+
+  const handleAgentTap = (agentType: string) => {
+    if (habitats.length === 0) return;
+    if (habitats.length === 1) {
+      onPlaceAgent(agentType, habitats[0].id);
+      return;
+    }
+    setSelectedAgent(agentType);
+    setDrawerOpen(false);
+  };
+
+  return (
+    <>
+      {/* Agent placement target selector */}
+      <AnimatePresence>
+        {selectedAgent && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="absolute bottom-0 left-0 right-0 z-30 bg-slate-900/98 border-t border-cyan-500/40 p-3 backdrop-blur-sm"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-cyan-300 flex items-center gap-1">
+                <MapPin size={12} /> Tap a habitat to place {AGENTS[selectedAgent]?.name}
+              </span>
+              <button onClick={() => setSelectedAgent(null)} className="text-slate-500 cursor-pointer"><X size={14} /></button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {habitats.map((h) => {
+                const def = HABITATS[h.type];
+                return (
+                  <button
+                    key={h.id}
+                    onClick={() => {
+                      onPlaceAgent(selectedAgent, h.id);
+                      setSelectedAgent(null);
+                    }}
+                    className="flex items-center gap-1.5 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-xs text-slate-200 cursor-pointer active:bg-slate-700"
+                  >
+                    <span>{def.icon}</span> {def.name}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Drawer toggle + content */}
+      {!selectedAgent && (
+        <div className="absolute bottom-0 left-0 right-0 z-20">
+          {/* Toggle bar */}
+          <button
+            onClick={() => setDrawerOpen(!drawerOpen)}
+            className="w-full flex items-center justify-center gap-2 bg-slate-800 border-t border-slate-700 py-2 cursor-pointer"
+          >
+            {drawerOpen ? <ChevronDown size={16} className="text-slate-400" /> : <ChevronUp size={16} className="text-slate-400" />}
+            <span className="text-xs text-slate-400 font-medium">
+              {drawerOpen ? 'Close' : 'Add Habitats & Agents'}
+            </span>
+          </button>
+
+          <AnimatePresence>
+            {drawerOpen && (
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{ height: 'auto' }}
+                exit={{ height: 0 }}
+                className="bg-slate-800/98 border-t border-slate-700 overflow-hidden backdrop-blur-sm"
+              >
+                {/* Tabs */}
+                <div className="flex border-b border-slate-700">
+                  <button
+                    onClick={() => setActiveTab('habitats')}
+                    className={`flex-1 py-2 text-xs font-medium text-center cursor-pointer transition-colors ${
+                      activeTab === 'habitats' ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-500'
+                    }`}
+                  >
+                    🏗️ Habitats
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('agents')}
+                    className={`flex-1 py-2 text-xs font-medium text-center cursor-pointer transition-colors ${
+                      activeTab === 'agents' ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-500'
+                    }`}
+                  >
+                    🤖 Agents
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="max-h-48 overflow-y-auto p-2 space-y-1.5">
+                  {activeTab === 'habitats' ? (
+                    habitatTypes.map((type) => (
+                      <HabitatPaletteItem key={type} type={type} onTap={() => { onPlaceHabitat(type); setDrawerOpen(false); }} />
+                    ))
+                  ) : (
+                    agentTypes.map((type) => (
+                      <AgentPaletteItem key={type} type={type} onTap={() => handleAgentTap(type)} />
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ============================================================
 // Main Build Phase Component
 // ============================================================
 export default function BuildPhase() {
   const {
     credits, timeRemaining, progress, habitats, connections,
     connectingFrom, cancelConnection, testSolution, resetGame, tick,
-    placeHabitat,
+    placeHabitat, placeAgent,
   } = useGameStore();
   const scenario = useGameStore((s) => s.getCurrentScenario());
   const boardRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   // Timer
   useEffect(() => {
@@ -447,7 +668,7 @@ export default function BuildPhase() {
     return () => clearInterval(interval);
   }, [tick]);
 
-  // Handle board drop for habitats
+  // Handle board drop for habitats (desktop only)
   const handleBoardDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     const habitatType = e.dataTransfer.getData('habitat-type') as HabitatType;
@@ -466,6 +687,22 @@ export default function BuildPhase() {
     }
   }, []);
 
+  // Mobile: auto-place habitat at a good position
+  const handleMobilePlaceHabitat = useCallback((type: HabitatType) => {
+    if (!boardRef.current) return;
+    const rect = boardRef.current.getBoundingClientRect();
+    const count = habitats.length;
+    // Spread habitats in a grid pattern
+    const cols = 2;
+    const col = count % cols;
+    const row = Math.floor(count / cols);
+    const x = 100 + col * 180 + (row % 2) * 40;
+    const y = 80 + row * 140;
+    const clampedX = Math.min(x, rect.width - 80);
+    const clampedY = Math.min(y, rect.height - 80);
+    placeHabitat(type, clampedX, clampedY);
+  }, [placeHabitat, habitats.length]);
+
   if (!scenario) return null;
 
   const timeWarning = timeRemaining < 60;
@@ -473,24 +710,24 @@ export default function BuildPhase() {
   const agentTypes = Object.keys(AGENTS);
 
   return (
-    <div className="h-screen flex flex-col bg-slate-900 overflow-hidden">
+    <div className="h-screen flex flex-col bg-slate-900 overflow-hidden no-overscroll">
       {/* Top Bar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-slate-800 border-b border-slate-700 shrink-0">
-        <div className="flex items-center gap-3">
-          <h1 className="text-sm font-bold text-cyan-400 tracking-wide">ECOARCHITECT</h1>
-          <span className="text-xs text-slate-500">|</span>
-          <span className="text-sm text-slate-300">{scenario.title}</span>
+      <div className="flex items-center justify-between px-2 sm:px-4 py-1.5 sm:py-2 bg-slate-800 border-b border-slate-700 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+          <h1 className="text-xs sm:text-sm font-bold text-cyan-400 tracking-wide shrink-0">ECOARCHITECT</h1>
+          <span className="text-xs text-slate-500 hidden sm:inline">|</span>
+          <span className="text-xs sm:text-sm text-slate-300 truncate">{scenario.title}</span>
         </div>
-        <div className="flex items-center gap-5">
-          <div className="flex items-center gap-1.5 text-sm">
-            <Coins size={14} className="text-yellow-400" />
+        <div className="flex items-center gap-2 sm:gap-5 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm">
+            <Coins size={12} className="text-yellow-400 sm:w-3.5 sm:h-3.5" />
             <span className="font-mono font-bold text-slate-100">{credits}</span>
           </div>
-          <div className={`flex items-center gap-1.5 text-sm ${timeWarning ? 'text-red-400' : ''}`}>
-            <Clock size={14} className={timeWarning ? 'text-red-400' : 'text-blue-400'} />
+          <div className={`flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm ${timeWarning ? 'text-red-400' : ''}`}>
+            <Clock size={12} className={`sm:w-3.5 sm:h-3.5 ${timeWarning ? 'text-red-400' : 'text-blue-400'}`} />
             <span className="font-mono font-bold text-slate-100">{formatTime(timeRemaining)}</span>
           </div>
-          <div className="flex items-center gap-1.5 text-sm">
+          <div className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm hidden sm:flex">
             <Star size={14} className="text-purple-400" />
             <span className="font-mono font-bold text-slate-100">{progress.reputation}</span>
           </div>
@@ -499,20 +736,22 @@ export default function BuildPhase() {
 
       {/* Main Content */}
       <div className="flex flex-1 min-h-0">
-        {/* Left Panel: Habitats */}
-        <div className="w-52 border-r border-slate-700 bg-slate-800/50 flex flex-col shrink-0">
-          <div className="px-3 py-2 border-b border-slate-700">
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Habitats</h2>
+        {/* Left Panel: Habitats (desktop only) */}
+        {!isMobile && (
+          <div className="w-52 border-r border-slate-700 bg-slate-800/50 flex flex-col shrink-0">
+            <div className="px-3 py-2 border-b border-slate-700">
+              <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Habitats</h2>
+            </div>
+            <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+              {habitatTypes.map((type) => (
+                <HabitatPaletteItem key={type} type={type} />
+              ))}
+            </div>
+            <div className="px-3 py-2 border-t border-slate-700 text-[10px] text-slate-600">
+              Drag habitats to the board
+            </div>
           </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
-            {habitatTypes.map((type) => (
-              <HabitatPaletteItem key={type} type={type} />
-            ))}
-          </div>
-          <div className="px-3 py-2 border-t border-slate-700 text-[10px] text-slate-600">
-            Drag habitats to the board
-          </div>
-        </div>
+        )}
 
         {/* Center: Building Board */}
         <div className="flex-1 relative min-w-0">
@@ -523,11 +762,11 @@ export default function BuildPhase() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="absolute top-3 left-1/2 -translate-x-1/2 z-20 bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-sm px-4 py-2 rounded-lg flex items-center gap-2 backdrop-blur-sm"
+                className="absolute top-2 left-2 right-2 sm:top-3 sm:left-1/2 sm:-translate-x-1/2 sm:left-auto sm:right-auto z-20 bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-xs sm:text-sm px-3 sm:px-4 py-2 rounded-lg flex items-center gap-2 backdrop-blur-sm"
               >
-                <Link2 size={14} />
-                Click another habitat to connect ({CONNECTION_COST} credits)
-                <button onClick={cancelConnection} className="ml-2 text-cyan-400 hover:text-white cursor-pointer">
+                <Link2 size={12} />
+                <span className="flex-1">Tap another habitat to connect</span>
+                <button onClick={cancelConnection} className="text-cyan-400 hover:text-white cursor-pointer">
                   <X size={14} />
                 </button>
               </motion.div>
@@ -536,8 +775,8 @@ export default function BuildPhase() {
 
           <div
             ref={boardRef}
-            onDrop={handleBoardDrop}
-            onDragOver={handleBoardDragOver}
+            onDrop={!isMobile ? handleBoardDrop : undefined}
+            onDragOver={!isMobile ? handleBoardDragOver : undefined}
             onClick={() => connectingFrom && cancelConnection()}
             className="w-full h-full relative overflow-hidden"
             style={{
@@ -567,49 +806,65 @@ export default function BuildPhase() {
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center text-slate-600">
                   <div className="text-4xl mb-2">🏗️</div>
-                  <div className="text-sm">Drag habitats here to start building</div>
+                  <div className="text-sm">{isMobile ? 'Tap below to add habitats' : 'Drag habitats here to start building'}</div>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Live Metrics */}
-          <LiveMetrics />
+          {/* Live Metrics (desktop: overlay on board, mobile: handled separately) */}
+          {!isMobile && <LiveMetrics />}
+
+          {/* Mobile: drawer + metrics */}
+          {isMobile && (
+            <>
+              <LiveMetrics />
+              <MobileDrawer
+                habitatTypes={habitatTypes}
+                agentTypes={agentTypes}
+                onPlaceHabitat={handleMobilePlaceHabitat}
+                onPlaceAgent={placeAgent}
+                habitats={habitats}
+              />
+            </>
+          )}
         </div>
 
-        {/* Right Panel: Agents */}
-        <div className="w-52 border-l border-slate-700 bg-slate-800/50 flex flex-col shrink-0">
-          <div className="px-3 py-2 border-b border-slate-700">
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Agents</h2>
+        {/* Right Panel: Agents (desktop only) */}
+        {!isMobile && (
+          <div className="w-52 border-l border-slate-700 bg-slate-800/50 flex flex-col shrink-0">
+            <div className="px-3 py-2 border-b border-slate-700">
+              <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Agents</h2>
+            </div>
+            <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+              {agentTypes.map((type) => (
+                <AgentPaletteItem key={type} type={type} />
+              ))}
+            </div>
+            <div className="px-3 py-2 border-t border-slate-700 text-[10px] text-slate-600">
+              Drag agents into habitats
+            </div>
           </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
-            {agentTypes.map((type) => (
-              <AgentPaletteItem key={type} type={type} />
-            ))}
-          </div>
-          <div className="px-3 py-2 border-t border-slate-700 text-[10px] text-slate-600">
-            Drag agents into habitats
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Bottom Bar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-slate-800 border-t border-slate-700 shrink-0">
-        <div className="flex-1 min-w-0">
+      <div className="flex items-center justify-between px-2 sm:px-4 py-1.5 sm:py-2 bg-slate-800 border-t border-slate-700 shrink-0">
+        <div className="flex-1 min-w-0 hidden sm:block">
           <div className="text-xs text-slate-500 truncate">
             📋 {scenario.briefing.substring(0, 100)}...
           </div>
         </div>
-        <div className="flex items-center gap-2 ml-4 shrink-0">
+        <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-4 shrink-0">
           <button
             onClick={resetGame}
-            className="flex items-center gap-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg px-3 py-2 transition-colors cursor-pointer"
+            className="flex items-center justify-center gap-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg px-3 py-2 transition-colors cursor-pointer"
           >
             <RotateCcw size={12} /> Reset
           </button>
           <button
             onClick={testSolution}
-            className="flex items-center gap-1.5 text-sm bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-semibold rounded-lg px-5 py-2 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-sm bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-semibold rounded-lg px-4 sm:px-5 py-2 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer"
           >
             <FlaskConical size={14} /> Test Solution
           </button>

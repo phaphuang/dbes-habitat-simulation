@@ -38,22 +38,22 @@ export default function StudyMode({ onBack }: { onBack: () => void }) {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700">
+      <div className="flex items-center justify-between px-3 py-3 sm:px-6 sm:py-4 border-b border-slate-700">
         <button
           onClick={onBack}
           className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
         >
           <ArrowLeft size={16} /> Back to Menu
         </button>
-        <h1 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-          <GraduationCap size={20} className="text-indigo-400" />
+        <h1 className="text-sm sm:text-lg font-bold text-slate-100 flex items-center gap-2">
+          <GraduationCap size={18} className="text-indigo-400" />
           Study Mode
         </h1>
-        <div className="w-24" />
+        <div className="w-16 sm:w-24" />
       </div>
 
       {/* Tab Switcher */}
-      <div className="flex justify-center gap-2 px-6 py-4">
+      <div className="flex justify-center gap-2 px-3 py-3 sm:px-6 sm:py-4">
         <button
           onClick={() => setTab('flashcards')}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${
@@ -77,7 +77,7 @@ export default function StudyMode({ onBack }: { onBack: () => void }) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex items-start justify-center px-6 py-4 overflow-y-auto">
+      <div className="flex-1 flex items-start justify-center px-3 py-3 sm:px-6 sm:py-4 overflow-y-auto">
         {tab === 'flashcards' ? (
           <div className="max-w-xl w-full">
             {/* Category Filter */}
@@ -120,12 +120,12 @@ export default function StudyMode({ onBack }: { onBack: () => void }) {
                   animate={{ rotateY: 0, opacity: 1 }}
                   transition={{ duration: 0.3 }}
                   onClick={() => setShowAnswer(!showAnswer)}
-                  className="bg-slate-800/80 border border-slate-700 rounded-2xl p-8 min-h-[220px] flex flex-col items-center justify-center text-center cursor-pointer hover:border-slate-600 transition-colors"
+                  className="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 sm:p-8 min-h-[180px] sm:min-h-[220px] flex flex-col items-center justify-center text-center cursor-pointer hover:border-slate-600 transition-colors"
                 >
                   <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-4">
                     {showAnswer ? '💡 Answer' : '❓ Question'} — {card.category}
                   </div>
-                  <p className={`text-lg leading-relaxed ${showAnswer ? 'text-emerald-300' : 'text-slate-200'}`}>
+                  <p className={`text-base sm:text-lg leading-relaxed ${showAnswer ? 'text-emerald-300' : 'text-slate-200'}`}>
                     {showAnswer ? card.answer : card.question}
                   </p>
                   <div className="mt-6 text-xs text-slate-600">

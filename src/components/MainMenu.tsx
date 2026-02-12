@@ -44,18 +44,18 @@ export default function MainMenu() {
   };
 
   return (
-    <div className="min-h-screen overflow-y-auto flex flex-col items-center justify-center p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950">
+    <div className="min-h-screen overflow-y-auto flex flex-col items-center justify-center px-3 py-4 sm:p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="text-center mb-10"
+        className="text-center mb-6 sm:mb-10"
       >
-        <h1 className="text-5xl font-bold bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent mb-2">
+        <h1 className="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent mb-2">
           EcoArchitect
         </h1>
-        <p className="text-slate-400 text-lg">DBES Habitat Simulation — Balanced Edition</p>
+        <p className="text-slate-400 text-sm sm:text-lg">DBES Habitat Simulation — Balanced Edition</p>
         <div className="flex items-center justify-center gap-6 mt-4 text-sm text-slate-500">
           <span className="flex items-center gap-1">
             <Trophy size={14} className="text-yellow-500" />
@@ -69,7 +69,7 @@ export default function MainMenu() {
       </motion.div>
 
       {/* Scenario Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 max-w-5xl w-full">
         {SCENARIOS.map((scenario, index) => {
           const unlocked = isUnlocked(scenario.id, index);
           const completed = progress.completedScenarios.includes(scenario.id);
@@ -85,7 +85,7 @@ export default function MainMenu() {
               <button
                 onClick={() => unlocked && startScenario(scenario.id)}
                 disabled={!unlocked}
-                className={`w-full text-left rounded-xl border p-5 transition-all duration-200 ${
+                className={`w-full text-left rounded-xl border p-3.5 sm:p-5 transition-all duration-200 ${
                   unlocked
                     ? 'border-slate-700 bg-slate-800/80 hover:border-cyan-500/50 hover:bg-slate-800 hover:shadow-lg hover:shadow-cyan-500/10 cursor-pointer'
                     : 'border-slate-800 bg-slate-900/50 opacity-50 cursor-not-allowed'
@@ -96,7 +96,7 @@ export default function MainMenu() {
                     <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">
                       Scenario {index + 1} — {scenario.subtitle}
                     </div>
-                    <h3 className="text-lg font-semibold text-slate-100">{scenario.title}</h3>
+                    <h3 className="text-base sm:text-lg font-semibold text-slate-100">{scenario.title}</h3>
                   </div>
                   {!unlocked && <Lock size={18} className="text-slate-600 mt-1" />}
                   {completed && (
@@ -142,7 +142,7 @@ export default function MainMenu() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.8 }}
-        className="mt-8 flex items-center gap-3"
+        className="mt-6 sm:mt-8 flex items-center gap-2 sm:gap-3"
       >
         <button
           onClick={() => setPhase('howtoplay')}

@@ -57,7 +57,7 @@ export default function ReviewPhase() {
   const scoreColor = overallScore >= 80 ? '#22c55e' : overallScore >= 70 ? '#eab308' : '#ef4444';
 
   return (
-    <div className="min-h-screen flex flex-col items-center py-8 px-6 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 overflow-y-auto">
+    <div className="min-h-screen flex flex-col items-center py-4 px-3 sm:py-8 sm:px-6 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 overflow-y-auto">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -78,7 +78,7 @@ export default function ReviewPhase() {
             </span>
           </motion.div>
 
-          <h2 className="text-2xl font-bold text-slate-100 mb-1">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-100 mb-1">
             {passed ? 'Ecosystem Approved!' : 'Needs Improvement'}
           </h2>
           <p className="text-slate-400 text-sm">{scenario.title} — {scenario.subtitle}</p>
@@ -91,8 +91,8 @@ export default function ReviewPhase() {
         {/* Score Breakdown Card */}
         <div className="bg-slate-800/80 border border-slate-700 rounded-xl overflow-hidden">
           {/* Stakeholder Satisfaction */}
-          <div className="px-6 py-5 border-b border-slate-700/50">
-            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
+          <div className="px-3 py-3 sm:px-6 sm:py-5 border-b border-slate-700/50">
+            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3 sm:mb-4">
               Stakeholder Satisfaction
             </h3>
             <div className="space-y-3">
@@ -136,11 +136,11 @@ export default function ReviewPhase() {
           </div>
 
           {/* Score Components */}
-          <div className="px-6 py-5 border-b border-slate-700/50">
+          <div className="px-3 py-3 sm:px-6 sm:py-5 border-b border-slate-700/50">
             <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
               Score Breakdown
             </h3>
-            <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
               <div className="flex justify-between bg-slate-900/50 rounded-lg px-3 py-2">
                 <span className="text-slate-400">Base Score</span>
                 <span className="font-mono text-slate-200">{scoreBreakdown.baseScore}%</span>
@@ -185,8 +185,8 @@ export default function ReviewPhase() {
           </div>
 
           {/* Feedback */}
-          <div className="px-6 py-5 border-b border-slate-700/50">
-            <div className="grid md:grid-cols-2 gap-4">
+          <div className="px-3 py-3 sm:px-6 sm:py-5 border-b border-slate-700/50">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* What worked */}
               <div>
                 <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2">
@@ -226,7 +226,7 @@ export default function ReviewPhase() {
           </div>
 
           {/* Concepts Applied */}
-          <div className="px-6 py-5">
+          <div className="px-3 py-3 sm:px-6 sm:py-5">
             <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
               <BookOpen size={14} /> Concepts Applied
             </h3>
@@ -244,7 +244,7 @@ export default function ReviewPhase() {
           </div>
 
           {/* Learning Objectives */}
-          <div className="px-6 py-5 border-t border-slate-700/50">
+          <div className="px-3 py-3 sm:px-6 sm:py-5 border-t border-slate-700/50">
             <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
               Learning Objectives
             </h3>
@@ -260,7 +260,7 @@ export default function ReviewPhase() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           {nextScenario && passed && (
             <motion.button
               onClick={() => startScenario(nextScenario.id)}

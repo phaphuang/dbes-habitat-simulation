@@ -52,27 +52,27 @@ export default function HowToPlay({ onBack }: { onBack: () => void }) {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700">
+      <div className="flex items-center justify-between px-3 py-3 sm:px-6 sm:py-4 border-b border-slate-700">
         <button
           onClick={onBack}
           className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
         >
           <ArrowLeft size={16} /> Back to Menu
         </button>
-        <h1 className="text-lg font-bold text-slate-100">🎮 How to Play</h1>
-        <div className="w-24" />
+        <h1 className="text-sm sm:text-lg font-bold text-slate-100">🎮 How to Play</h1>
+        <div className="w-16 sm:w-24" />
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-8">
-        <div className="max-w-2xl mx-auto space-y-4">
+      <div className="flex-1 overflow-y-auto px-3 py-4 sm:px-6 sm:py-8">
+        <div className="max-w-2xl mx-auto space-y-3 sm:space-y-4">
           {/* Intro */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-8"
           >
-            <h2 className="text-2xl font-bold text-slate-100 mb-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-100 mb-2">
               Learn EcoArchitect in 60 Seconds
             </h2>
             <p className="text-slate-400">
@@ -87,7 +87,7 @@ export default function HowToPlay({ onBack }: { onBack: () => void }) {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="bg-slate-800/80 border border-slate-700 rounded-xl p-5 flex gap-4"
+              className="bg-slate-800/80 border border-slate-700 rounded-xl p-3 sm:p-5 flex gap-3 sm:gap-4"
             >
               <div className="shrink-0 w-10 h-10 rounded-full bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-lg">
                 {step.icon}
@@ -114,7 +114,7 @@ export default function HowToPlay({ onBack }: { onBack: () => void }) {
             className="bg-slate-800/80 border border-slate-700 rounded-xl p-5 mt-6"
           >
             <h3 className="text-sm font-semibold text-slate-100 mb-3">Quick Reference</h3>
-            <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs">
               <div className="bg-slate-900/50 rounded-lg p-3">
                 <div className="font-medium text-emerald-400 mb-1">🟢 Good Fit</div>
                 <div className="text-slate-400">Agent matches habitat type → +10% bonus</div>
@@ -150,7 +150,7 @@ export default function HowToPlay({ onBack }: { onBack: () => void }) {
             className="bg-slate-800/80 border border-slate-700 rounded-xl p-5"
           >
             <h3 className="text-sm font-semibold text-slate-100 mb-3">Star Rating</h3>
-            <div className="flex gap-6 text-sm">
+            <div className="flex gap-4 sm:gap-6 text-sm">
               <div className="text-center">
                 <div className="text-2xl mb-1">⭐</div>
                 <div className="text-slate-400">70%+</div>
